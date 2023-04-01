@@ -179,8 +179,7 @@ def main(flags) -> None:
         metric=metric
     )
     pipeline = create_pipeline(algo_config=algorithms, engine=engine)
-    fp_results = pipeline.evaluate(ir_model)
-    if fp_results:
+    if fp_results := pipeline.evaluate(ir_model):
         print("FP32 model results:")
         for name, value in fp_results.items():
             print(f"{name} : {value:.5f}")
@@ -193,8 +192,7 @@ def main(flags) -> None:
         save_path=flags.output_dir,
         model_name="convai_ov_int8")
 
-    int_results = pipeline.evaluate(compressed_model)
-    if int_results:
+    if int_results := pipeline.evaluate(compressed_model):
         print("INT8 model results:")
         for name, value in int_results.items():
             print(f"{name} : {value:.5f}")

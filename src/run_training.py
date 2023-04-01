@@ -110,7 +110,7 @@ def main(flags):
             with torch.no_grad():
                 torch.onnx.export(
                     model,
-                    (ids[0:1], mask[0:1]),
+                    (ids[:1], mask[:1]),
                     onnx_model,
                     opset_version=11,
                     do_constant_folding=True,
@@ -118,8 +118,8 @@ def main(flags):
                     output_names=["logits_token", "logits_sequence"],
                     dynamic_axes={
                         'input_ids': {0: "batch_size"},
-                        'attention_mask': {0: "batch_size"}
-                    }
+                        'attention_mask': {0: "batch_size"},
+                    },
                 )
 
     logger.info("=======> Test Accuracy on NER : %.2f", accuracy_ner)

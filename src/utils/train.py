@@ -41,8 +41,7 @@ def evaluate_accuracy(
     model.eval()
 
     with torch.no_grad():
-        for _, batch in enumerate(dataloader):
-
+        for batch in dataloader:
             ids = batch['input_ids']
             mask = batch['attention_mask']
             labels = batch['labels']

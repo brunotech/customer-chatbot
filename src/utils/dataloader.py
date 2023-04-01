@@ -42,15 +42,14 @@ def construct_vocab(
     for seq in input_seqs:
         if isinstance(seq, type([])):
             for word in seq:
-                if word not in vocab:
-                    vocab[word] = 1
-                else:
+                if word in vocab:
                     vocab[word] += 1
+                else:
+                    vocab[word] = 1
+        elif seq not in vocab:
+            vocab[seq] = 1
         else:
-            if seq not in vocab:
-                vocab[seq] = 1
-            else:
-                vocab[seq] += 1
+            vocab[seq] += 1
 
     # Discard start, end, pad and unk tokens if already present
     if '<s>' in vocab:
@@ -114,7 +113,7 @@ def read_vocab_file(
     if not no_unk:
         word2id['<unk>'] = len(word2id)
         id2word[len(id2word)] = '<unk>'
-    if bos_eos is True:
+    if bos_eos:
         word2id['<s>'] = len(word2id)
         id2word[len(id2word)] = '<s>'
         word2id['</s>'] = len(word2id)
@@ -122,7 +121,7 @@ def read_vocab_file(
     with open(vocab_path, 'r', encoding="utf8") as file:
         for line in file:
             if separator in line:
-                word, idx = line.strip('\r\n').split(' '+separator+' ')
+                word, idx = line.strip('\r\n').split(f' {separator} ')
                 idx = int(idx)
             else:
                 word = line.strip()
@@ -224,10 +223,8 @@ def read_seqtag_data_with_class(
                 word, tag = separator.join(tmp[:-1]), tmp[-1]
                 if lowercase:
                     word = word.lower()
-                in_seq.append(
-                    word2idx[word] if word in word2idx else word2idx['<unk>'])
-                tag_seq.append(tag2idx[tag] if tag in tag2idx else (
-                    tag2idx['<unk>'], tag))
+                in_seq.append(word2idx.get(word, word2idx['<unk>']))
+                tag_seq.append(tag2idx.get(tag, (tag2idx['<unk>'], tag)))
             if keep_order:
                 in_seq.append(line_num)
             input_seqs.append(in_seq)
@@ -238,18 +235,17 @@ def read_seqtag_data_with_class(
                 else:
                     class_labels.append([class2idx[val]
                                         for val in class_name.split(';')])
-            else:
-                if ';' not in class_name:
-                    class_labels.append(class2idx[class_name])
-                else:
-                    # get the first class for training
-                    class_labels.append(
-                        (
-                            class2idx[class_name.split(';')[0]],
-                            class_name.split(';')
-                        )
+            elif ';' in class_name:
+                # get the first class for training
+                class_labels.append(
+                    (
+                        class2idx[class_name.split(';')[0]],
+                        class_name.split(';')
                     )
+                )
 
+            else:
+                class_labels.append(class2idx[class_name])
     input_feats = {'data': input_seqs}
     tag_labels = {'data': tag_seqs}
     class_labels = {'data': class_labels}
@@ -323,13 +319,14 @@ def load_dataset(data_path, tokenizer, max_length):
     Returns:
         Dict[str, Any] : collection of datasets
     """
-    word2id, id2word = read_vocab_from_data_file(data_path + "/train")
-    class2id, id2class = read_vocab_file(data_path + "/vocab.intent")
-    tag2id, id2tag = read_vocab_file(data_path + "/vocab.slot")
+    word2id, id2word = read_vocab_from_data_file(f"{data_path}/train")
+    class2id, id2class = read_vocab_file(f"{data_path}/vocab.intent")
+    tag2id, id2tag = read_vocab_file(f"{data_path}/vocab.slot")
 
     def get_ds(file_name):
         input_feats, tag_labels, class_labels = read_seqtag_data_with_class(
-            data_path + "/" + file_name, word2id, tag2id, class2id)
+            f"{data_path}/{file_name}", word2id, tag2id, class2id
+        )
         sentences = []
         labels = []
         cls_labels = []

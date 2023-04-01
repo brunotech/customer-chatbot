@@ -45,8 +45,7 @@ def inference(predict_fn, ids, mask, n_runs) -> float:
             end = time.time()
         times.append(end - start)
 
-    avg_time = np.mean(times[2:])
-    return avg_time
+    return np.mean(times[2:])
 
 
 def main(flags) -> None:
@@ -98,7 +97,7 @@ def main(flags) -> None:
             with torch.no_grad():
                 torch.onnx.export(
                     model,
-                    (ids[0:1], mask[0:1]),
+                    (ids[:1], mask[:1]),
                     tmp.name,
                     opset_version=11,
                     do_constant_folding=True,
@@ -106,8 +105,8 @@ def main(flags) -> None:
                     output_names=["logits_token", "sequence_loss"],
                     dynamic_axes={
                         'input_ids': {0: "batch_size"},
-                        'attention_mask': {0: "batch_size"}
-                    }
+                        'attention_mask': {0: "batch_size"},
+                    },
                 )
 
         # read in onnx and convert to openVINO IR

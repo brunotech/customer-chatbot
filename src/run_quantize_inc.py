@@ -47,9 +47,7 @@ class INCDataset:
         return (x_vals), y_vals
 
     def __len__(self):
-        if self.n_elements is None:
-            return len(self.dloader)
-        return self.n_elements
+        return len(self.dloader) if self.n_elements is None else self.n_elements
 
 
 def main(flags) -> None:
@@ -200,10 +198,9 @@ def main(flags) -> None:
             dataset['test'][0]['attention_mask'].view(1, -1)
         )
 
-        conf = ipex.quantization.QuantConf(
-            flags.output_dir + "/best_configure.json")
+        conf = ipex.quantization.QuantConf(f"{flags.output_dir}/best_configure.json")
         model = ipex.quantization.convert(model, conf, jit_inputs)
-        torch.jit.save(model, flags.output_dir + "/" + fname + "_inc_quant.pt")
+        torch.jit.save(model, f"{flags.output_dir}/{fname}_inc_quant.pt")
     else:
         quantized_model.save(flags.output_dir)
 

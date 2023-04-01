@@ -45,8 +45,7 @@ def inference(predict_fn, ids, mask, n_runs) -> float:
             predictions.append(res)
         times.append(end - start)
 
-    avg_time = np.mean(times[2:])
-    return avg_time
+    return np.mean(times[2:])
 
 
 def main(flags) -> None:
